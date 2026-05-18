@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>European Politics and Governance | EU Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root, :root[data-theme="dark"] {
+            --bg-site:#0B132B; --bg-panel:#112240; --bg-header:#060b19;
+            --text-main:#E2E8F0; --text-muted:#94A3B8; --border-color:#1E3A8A;
+            --accent-primary:#FBBF24; --accent-secondary:#FFFFFF;
+            --nav-bg:#060b19; --btn-bg-hover:#FBBF24; --btn-text-hover:#060b19;
+            --border-highlight:#060b19; --map-overlay-bg:rgba(6,11,25,0.88);
+            --eu-color:#3B82F6; --euro-color:#10B981; --schengen-color:#0EA5E9;
+            --candidate-color:#F59E0B; --perspective-color:#FBBF24;
+            --former-color:#EF4444; --none-color:#1E293B;
+            --snap-card-bg:#0d1b36; --snap-strip-bg:#07101f;
+            --snap-detail-bg:#0f1e38; --snap-border:#1e3a8a;
+            --serif:"Playfair Display",Georgia,serif;
+            --sans:"DM Sans",sans-serif; --mono:"DM Mono",monospace;
+        }
+        :root[data-theme="light"] {
+            --bg-site:#F7F6F2; --bg-panel:#ffffff; --bg-header:#1a1a2e;
+            --text-main:#1a1a2e; --text-muted:#555555; --border-color:#dde3f0;
+            --accent-primary:#003399; --accent-secondary:#003399;
+            --nav-bg:#1a1a2e; --btn-bg-hover:#003399; --btn-text-hover:#ffffff;
+            --border-highlight:#ffffff; --map-overlay-bg:rgba(255,255,255,0.95);
+            --eu-color:#003399; --euro-color:#00c97a; --schengen-color:#4a9eff;
+            --candidate-color:#ff9f40; --perspective-color:#f59e0b;
+            --former-color:#cc0000; --none-color:#eef0f7;
+            --snap-card-bg:#e8edf5; --snap-strip-bg:#dde3f0;
+            --snap-detail-bg:#f0f4fb; --snap-border:#c0cce0;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:var(--sans);color:var(--text-main);background:var(--bg-site);line-height:1.6;overflow-x:hidden;transition:background .4s,color .4s;}
+        h1,h2,h3,h4{color:var(--text-main);transition:color .4s;}
+
+        /* ── NAV ── */
+        header{background:var(--nav-bg);color:#fff;padding:0 3rem;height:70px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:9999;border-bottom:2px solid var(--accent-primary);transition:background .4s;}
+        .nav-left{display:flex;align-items:center;gap:2vw;}
+        .logo{font-family:var(--sans);font-size:clamp(1rem,1.5vw,1.2rem);font-weight:700;letter-spacing:2px;color:var(--accent-primary);text-decoration:none;text-transform:uppercase;}
+        nav ul{list-style:none;display:flex;gap:1vw;align-items:center;}
+        nav ul li a{color:#fff;text-decoration:none;font-size:.9rem;font-weight:500;padding:.5rem 1rem;transition:color .3s;}
+        nav ul li a:hover{color:var(--accent-primary);}
+        .nav-right{display:flex;gap:1.5rem;align-items:center;}
+        .theme-toggle{background:transparent;border:1px solid var(--accent-primary);color:var(--accent-primary);padding:.4rem 1rem;border-radius:20px;font-family:var(--sans);font-weight:600;cursor:pointer;transition:.3s;}
+        .theme-toggle:hover{background:var(--accent-primary);color:var(--nav-bg);}
+
+        /* ── HERO ── */
+        .hero{display:flex;min-height:calc(100vh - 70px);position:relative;overflow:hidden;}
+        .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center right;z-index:0;}
+        .hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,rgba(6,11,25,.93) 0%,rgba(6,11,25,.78) 42%,rgba(6,11,25,.22) 72%,rgba(6,11,25,.04) 100%);}
+        :root[data-theme="light"] .hero-bg::after{background:linear-gradient(to right,rgba(247,246,242,.93) 0%,rgba(247,246,242,.75) 42%,rgba(247,246,242,.15) 72%,rgba(247,246,242,.02) 100%);}
+        .hero-content{position:relative;z-index:2;flex:0 0 55%;padding:4rem 4rem 4rem 10%;display:flex;flex-direction:column;justify-content:center;}
+        .hero-subtitle{font-weight:700;color:var(--accent-primary);text-transform:uppercase;letter-spacing:3px;font-size:clamp(.75rem,1.2vw,.9rem);margin-bottom:1.2rem;}
+        .hero-title{font-family:var(--sans);font-size:clamp(2.2rem,4.5vw,4.2rem);font-weight:700;line-height:1.1;color:var(--text-main);max-width:680px;}
+        .hero-title span{color:var(--accent-primary);}
+
+        /* ── LAYOUT ── */
+        .container{max-width:1600px;margin:auto;padding:3rem 4vw 2rem;}
+        section.content-block{background:var(--bg-panel);margin-bottom:3rem;padding:2rem;border-radius:8px;box-shadow:0 10px 20px rgba(0,0,0,.15);scroll-margin-top:100px;border:1px solid var(--border-color);transition:background .4s,border-color .4s;}
+        section.content-block>h2{border-bottom:2px solid var(--accent-primary);padding-bottom:.5rem;margin-top:0;font-size:2rem;color:var(--accent-primary);}
+
+        /* ── MAP WIDGET ── */
+        .app-container{display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:600px;max-height:900px;border-radius:12px;overflow:hidden;border:2px solid var(--border-color);box-shadow:0 15px 40px rgba(0,0,0,.3);background:var(--bg-site);margin-top:1.5rem;transition:background .4s,border-color .4s;}
+        .map-header{background:var(--bg-header);border-bottom:2px solid var(--border-color);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:1000;transition:background .4s,border-color .4s;}
+        .map-logo{color:var(--accent-primary);font-family:var(--serif);font-size:1.2rem;font-weight:700;}
+        .map-subtitle{font-family:var(--mono);color:rgba(255,255,255,.7);font-size:.75rem;text-transform:uppercase;letter-spacing:1px;}
+        .main-area{display:flex;flex:1;overflow:hidden;}
+        .left-panel{width:330px;flex-shrink:0;background:var(--bg-panel);border-right:1px solid var(--border-color);display:flex;flex-direction:column;overflow-y:auto;z-index:10;transition:background .4s,border-color .4s;}
+        .right-panel{width:360px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--border-color);display:flex;flex-direction:column;overflow-y:auto;padding:1.5rem;z-index:10;transition:background .4s,border-color .4s;}
+        .right-panel::-webkit-scrollbar,.left-panel::-webkit-scrollbar{width:6px;}
+        .right-panel::-webkit-scrollbar-track,.left-panel::-webkit-scrollbar-track{background:var(--bg-site);}
+        .right-panel::-webkit-scrollbar-thumb,.left-panel::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:3px;}
+        .panel-section{padding:1.2rem 1.4rem;border-bottom:1px solid var(--border-color);transition:border-color .4s;}
+        .panel-section:last-child{border-bottom:none;}
+        .panel-label{font-size:.65rem;font-family:var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.8rem;display:block;}
+        .year-hero{font-family:var(--serif);font-size:3.5rem;font-weight:900;color:var(--accent-primary);line-height:1;margin-bottom:10px;transition:color .4s;}
+        input[type=range]{width:100%;cursor:pointer;accent-color:var(--accent-primary);margin-top:10px;}
+        .play-btn{width:100%;padding:12px;margin-top:15px;border:2px solid var(--accent-primary);border-radius:4px;background:transparent;color:var(--accent-primary);font-family:var(--sans);font-size:.9rem;font-weight:600;cursor:pointer;transition:.3s;}
+        .play-btn:hover{background:var(--btn-bg-hover);color:var(--btn-text-hover);}
+        .legend-dot{width:12px;height:12px;border-radius:2px;display:inline-block;margin-right:8px;vertical-align:middle;}
+        .legend-row{font-size:.85rem;margin-bottom:8px;color:var(--text-main);display:flex;align-items:center;transition:color .4s;}
+        #map{flex:1;background:var(--bg-site);position:relative;z-index:1;transition:background .4s;}
+        .map-overlay{position:absolute;top:20px;left:20px;z-index:1000;background:var(--map-overlay-bg);padding:12px 18px;border-radius:4px;border-left:4px solid var(--accent-primary);box-shadow:0 4px 15px rgba(0,0,0,.2);backdrop-filter:blur(4px);transition:background .4s;}
+        .overlay-year{font-weight:900;font-family:var(--serif);font-size:1.5rem;color:var(--text-main);line-height:1.2;transition:color .4s;}
+        .overlay-count{font-size:.75rem;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+        .country-card{animation:fadeIn .4s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .name-large{font-family:var(--serif);font-size:2.2rem;font-weight:700;color:var(--accent-primary);line-height:1.2;margin-bottom:15px;transition:color .4s;}
+        .badge{display:inline-block;padding:6px 10px;border-radius:4px;font-size:.75rem;font-family:var(--mono);margin:0 5px 8px 0;font-weight:600;color:#fff;}
+        .bg-eu{background:var(--eu-color)}.bg-euro{background:var(--euro-color)}.bg-schengen{background:var(--schengen-color)}.bg-candidate{background:var(--candidate-color)}.bg-former{background:var(--former-color)}.bg-none{background:var(--none-color);color:var(--text-main);border:1px solid var(--border-color)}
+        .integration-text{font-size:.9rem;color:var(--text-main);line-height:1.6;margin-top:15px;transition:color .4s;}
+
+        /* ── SNAPSHOTS ── */
+        #accomplishments{padding:0;overflow:hidden;}
+        #accomplishments>h2{margin:2rem 2rem 0;padding-bottom:.75rem;}
+        #accomplishments>.section-intro{color:var(--text-muted);font-size:.95rem;padding:0 2rem 1.5rem;line-height:1.6;}
+
+        .snap-strip-wrap{position:relative;background:var(--snap-strip-bg);border-top:1px solid var(--snap-border);border-bottom:1px solid var(--snap-border);}
+        .snap-nav-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:20;width:44px;height:44px;border-radius:50%;background:var(--accent-primary);color:#000;border:none;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 3px 12px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
+        .snap-nav-btn:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 5px 18px rgba(0,0,0,.5);}
+        .snap-nav-btn.prev{left:12px;}
+        .snap-nav-btn.next{right:12px;}
+
+        .snap-strip{display:flex;overflow-x:auto;scroll-behavior:smooth;gap:0;padding:0 56px;scrollbar-width:none;}
+        .snap-strip::-webkit-scrollbar{display:none;}
+
+        .snap-card{
+            flex:0 0 220px; min-height:280px; position:relative; cursor:pointer;
+            overflow:hidden; border-right:1px solid var(--snap-border);
+            transition:flex .35s ease, transform .3s ease, box-shadow .3s ease;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .snap-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+        }
+        .snap-card:last-child{border-right:none;}
+        .snap-card.active{flex:0 0 280px;}
+
+        .snap-card-inner{
+            position:absolute; inset:0;
+            display:flex; flex-direction:column; justify-content:flex-end;
+            padding:1.4rem 1.2rem;
+            transition:background .4s;
+        }
+        .snap-card::before{
+            content:""; position:absolute; inset:0; z-index:0;
+            background:linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.3) 60%, transparent 100%);
+            transition:opacity .35s;
+        }
+        .snap-card:hover::before,.snap-card.active::before{opacity:1;}
+
+        .snap-card-top-bar{position:absolute;top:0;left:0;right:0;height:4px;z-index:2;}
+
+        .snap-icon{font-size:2.4rem;margin-bottom:.5rem;position:relative;z-index:2;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));}
+        .snap-year{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);position:relative;z-index:2;margin-bottom:.2rem;}
+        .snap-title{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:#fff;position:relative;z-index:2;line-height:1.25;margin-bottom:.35rem;}
+        .snap-tag{display:inline-block;font-size:.62rem;font-family:var(--mono);padding:.15rem .45rem;border-radius:2px;position:relative;z-index:2;font-weight:600;color:#fff;}
+
+        .snap-card::after{
+            content:""; position:absolute; bottom:0; left:0; right:0; height:3px;
+            background:var(--accent-primary); transform:scaleX(0); transform-origin:left;
+            transition:transform .3s ease; z-index:3;
+        }
+        .snap-card:hover::after,.snap-card.active::after{transform:scaleX(1);}
+
+        .snap-detail{
+            background:var(--snap-detail-bg);
+            border-top:2px solid var(--accent-primary);
+            overflow:hidden;
+            max-height:0; transition:max-height .45s cubic-bezier(.4,0,.2,1), padding .3s;
+            padding:0 2.5rem;
+        }
+        .snap-detail.open{max-height:600px;padding:2rem 2.5rem;}
+
+        .snap-detail-inner{display:grid;grid-template-columns:1fr 2fr;gap:3rem;align-items:start;}
+        .snap-detail-left{}
+        .snap-detail-eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-primary);margin-bottom:.5rem;}
+        .snap-detail-title{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--text-main);line-height:1.15;margin-bottom:.75rem;}
+        .snap-detail-image-wrap{
+            width:100%;
+            margin:1.2rem 0;
+            border-radius:6px;
+            overflow:hidden;
+            border:1px solid var(--snap-border);
+            box-shadow:0 6px 15px rgba(0,0,0,.25);
+            background:#07101f;
+        }
+        .snap-detail-image{
+            width:100%;
+            height:220px;
+            object-fit:cover;
+            display:block;
+            transition:transform .4s ease;
+        }
+        .snap-detail-image:hover{
+            transform:scale(1.04);
+        }
+        .snap-detail-stat{font-family:var(--mono);font-size:.78rem;color:var(--text-muted);margin-top:.5rem;}
+        .snap-detail-stat strong{color:var(--accent-primary);}
+        .snap-detail-right{}
+        .snap-detail-body{font-size:.95rem;color:var(--text-muted);line-height:1.75;}
+        .snap-detail-body p{margin-bottom:.75rem;}
+        .snap-detail-body p:last-child{margin-bottom:0;}
+        .snap-close{
+            display:inline-flex;align-items:center;gap:6px;
+            margin-top:1.2rem;font-size:.8rem;font-family:var(--mono);
+            color:var(--accent-primary);cursor:pointer;background:none;border:none;
+            letter-spacing:.08em;text-transform:uppercase;
+            transition:opacity .2s;
+        }
+        .snap-close:hover{opacity:.7;}
+
+        /* Geopolitics section */
+        .geo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem;}
+        .geo-card{background:var(--bg-site);border-left:4px solid var(--accent-primary);padding:1.4rem;border-radius:4px;border:1px solid var(--border-color);}
+        .geo-card h4{color:var(--accent-primary);margin-bottom:.6rem;}
+        .geo-card p{font-size:.9rem;color:var(--text-muted);line-height:1.65;}
+
+        /* ── SECTION HIGHLIGHT ── */
+        .section-badge{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent-primary);color:#000;font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.28rem .75rem;border-radius:2px;margin-bottom:.6rem;}
+        .section-number{font-size:1.8rem;font-weight:900;font-family:var(--serif);color:var(--accent-primary);opacity:.13;position:absolute;top:1.2rem;right:1.8rem;line-height:1;pointer-events:none;transition:color .4s;}
+        section.content-block{position:relative;overflow:hidden;}
+        section.content-block.featured{border-color:var(--accent-primary);border-width:2px;box-shadow:0 10px 40px rgba(251,191,36,.09);}
+        :root[data-theme="light"] section.content-block.featured{box-shadow:0 10px 40px rgba(0,51,153,.1);}
+
+        /* ── REFERENCES ── */
+        #references{padding:1.5rem 2rem;}
+        #references>h2{font-size:1.2rem;border-bottom-width:1px;margin-bottom:.3rem;color:var(--text-muted);}
+        .ref-note{font-size:.7rem;color:var(--text-muted);margin-bottom:1rem;font-family:var(--mono);letter-spacing:.04em;opacity:.75;}
+        .reference-list{list-style-type:none;padding-left:0;color:var(--text-muted);font-size:.73rem;line-height:1.65;columns:2;column-gap:2rem;}
+        @media(max-width:900px){.reference-list{columns:1;}}
+        .reference-list li{margin-bottom:.55rem;padding-left:1.6rem;text-indent:-1.6rem;border-bottom:1px solid var(--border-color);padding-bottom:.45rem;break-inside:avoid;transition:border-color .4s;}
+        .reference-list li:last-child{border-bottom:none;}
+        .reference-list a{color:var(--accent-primary);word-break:break-all;text-decoration:none;font-size:.7rem;}
+        .reference-list a:hover{text-decoration:underline;}
+
+        footer{text-align:center;padding:2rem;background:var(--bg-header);color:#fff;border-top:1px solid var(--border-color);}
+
+        @media(max-width:1024px){
+            header{padding:0 1rem;} .hero-content{flex:1;padding:4rem 2rem;}
+            nav ul{flex-wrap:wrap;justify-content:center;gap:.5rem;}
+            .app-container{height:auto;min-height:1000px;} .main-area{flex-direction:column;}
+            .left-panel{width:100%;border-right:none;border-bottom:1px solid var(--border-color);height:auto;max-height:400px;}
+            #map{min-height:500px;} .right-panel{width:100%;border-left:none;border-top:1px solid var(--border-color);min-height:350px;}
+            .snap-card{flex:0 0 180px;} .snap-card.active{flex:0 0 240px;}
+            .snap-detail-inner{grid-template-columns:1fr;}
+            .geo-grid{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="nav-left">
+        <a href="#" class="logo">European Politics and Governance</a>
+        <nav><ul>
+            <li><a href="#history">Interactive Timeline</a></li>
+            <li><a href="#accomplishments">Key Accomplishments</a></li>
+            <li><a href="#geopolitics">New World Order</a></li>
+            <li><a href="#references">References</a></li>
+        </ul></nav>
+    </div>
+    <div class="nav-right">
+        <button class="theme-toggle" id="themeToggle">&#9728;&#65039; Light Mode</button>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-content">
+        <div class="hero-subtitle">Explore European Integration</div>
+        <h1 class="hero-title">Discover the History to<br><span>Understand the Future</span></h1>
+    </div>
+</section>
+
+<div class="container">
+
+<section id="history" class="content-block featured">
+    <span class="section-number">01</span>
+    <div class="section-badge">⭐ Core Feature</div>
+    <h2>Interactive Events &amp; Enlargement Map</h2>
+    <p style="color:var(--text-muted);margin-bottom:0;">Use the timeline slider to explore the history of the EU, major treaties, and key geopolitical events. Click any country to view its integration timeline.</p>
+    <div class="app-container">
+      <div class="map-header">
+        <div class="map-logo">EU Geographic Timeline</div>
+        <div class="map-subtitle">Integration Mapping &middot; 1950&ndash;2026</div>
+      </div>
+      <div class="main-area">
+        <div class="left-panel">
+          <div class="panel-section">
+            <span class="panel-label">Historical Year</span>
+            <div class="year-hero" id="yearVal">1957</div>
+            <input type="range" id="yearSlider" min="1950" max="2026" value="1957">
+            <button class="play-btn" id="playBtn">&#9654; Animate Timeline</button>
+          </div>
+          <div class="panel-section">
+            <span class="panel-label">Map Legend</span>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--euro-color)"></span>EU + Eurozone</div>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--eu-color)"></span>EU Member</div>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--schengen-color)"></span>Schengen only</div>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--candidate-color)"></span>EU Candidate</div>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--former-color)"></span>Former Member</div>
+          </div>
+          <div class="panel-section">
+            <span class="panel-label">Major Treaties &amp; Key Events</span>
+            <div id="eventBox" style="font-size:.95rem;color:var(--text-main);line-height:1.5;font-weight:400;"></div>
+          </div>
+        </div>
+        <div id="map">
+          <div class="map-overlay">
+            <div class="overlay-year" id="overlayYear">1957</div>
+            <div class="overlay-count" id="overlayCount">6 Member States</div>
+          </div>
+        </div>
+        <div class="right-panel">
+          <div id="placeholder" style="text-align:center;color:var(--text-muted);margin-top:60px;">
+            <div style="font-size:3.5rem;margin-bottom:20px;opacity:.5;">&#127758;</div>
+            <p style="font-size:.95rem;line-height:1.6;">Select a country on the map to explore its EU journey, candidate status, and membership details.</p>
+          </div>
+          <div class="country-card" id="countryDetail" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section id="accomplishments" class="content-block featured">
+    <span class="section-number">02</span>
+    <div style="margin:2rem 2rem 0;">
+        <div class="section-badge">⭐ Core Feature</div>
+    </div>
+    <h2>Key Accomplishments</h2>
+    <p class="section-intro">Eight decades of integration have produced historic milestones that transformed Europe. Click any snapshot to explore the full story.</p>
+
+    <div class="snap-strip-wrap">
+        <button class="snap-nav-btn prev" id="snapPrev">&#8592;</button>
+        <div class="snap-strip" id="snapStrip"></div>
+        <button class="snap-nav-btn next" id="snapNext">&#8594;</button>
+    </div>
+
+    <div class="snap-detail" id="snapDetail">
+        <div class="snap-detail-inner" id="snapDetailInner"></div>
+    </div>
+</section>
+
+<section id="geopolitics" class="content-block featured">
+    <span class="section-number">03</span>
+    <div class="section-badge">⭐ Core Feature</div>
+    <h2>The EU in a New Geopolitical World Order</h2>
+    <p style="color:var(--text-muted);font-size:.95rem;line-height:1.7;margin-bottom:2rem;">The European Union has evolved from a civilian power rooted in diplomacy and trade into an assertive geopolitical actor. Global instability, shifting alliances, and new security threats have accelerated this transformation — pushing the EU to pursue strategic autonomy, expand its regulatory reach, and take a unified stance across defence, economics, and digital governance.</p>
+
+    <div class="geo-tabs" id="geoTabs">
+        <button class="geo-tab active" data-tab="geopolitical-order">🌐 Geopolitical Order</button>
+        <button class="geo-tab" data-tab="regulatory">⚖️ Regulatory Power</button>
+        <button class="geo-tab" data-tab="stabilizer">🏛️ System Stabilizer</button>
+        <button class="geo-tab" data-tab="autonomy">🛡️ Strategic Autonomy</button>
+        <button class="geo-tab" data-tab="multilateral">🤝 Multilateral Power</button>
+        <button class="geo-tab" data-tab="green">🌿 Green Transition</button>
+        <button class="geo-tab" data-tab="agency">📊 Geopolitical Agency</button>
+        <button class="geo-tab" data-tab="digital">💻 Digital Sovereignty</button>
+        <button class="geo-tab" data-tab="geoeconomic">💶 Geo-Economic Power</button>
+    </div>
+
+    <div class="geo-panel active" id="tab-geopolitical-order">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">🌐</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 1</div>
+                <h3 class="geo-panel-title">The EU as a Geopolitical Order</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>From Civilian to Strategic Power</h4>
+                <p>The European Union was traditionally viewed as a civilian power relying on diplomacy, trade, and the promotion of norms rather than military force. Global instability, wars, and shifting alliances have pushed the EU to become more politically and strategically active.</p>
+            </div>
+            <div class="geo-card">
+                <h4>Pursuing Strategic Autonomy</h4>
+                <p>The EU is currently pursuing strategic autonomy to strengthen its independent capacity in defense, economic resilience, and foreign policy decision-making — expanding geopolitical capabilities through increased defense cooperation and enhanced economic security.</p>
+            </div>
+            <div class="geo-card">
+                <h4>Active Crisis Responder</h4>
+                <p>Instead of remaining a passive observer, the EU acts as an active player responding to crises through sanctions, diplomacy, and strategic partnerships — taking a unified stance in international relations.</p>
+            </div>
+            <div class="geo-card">
+                <h4>Shaping Global Politics</h4>
+                <p>This transformation reflects the EU's ambition to proactively shape global politics and influence the international system, moving beyond a reactive posture toward genuine geopolitical agency.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-regulatory">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">⚖️</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 2</div>
+                <h3 class="geo-panel-title">EU as a Regulatory Power in the New Geopolitical Order</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>🌍 The Brussels Effect</h4>
+                <p>The EU operates as a "regulatory superpower" by leveraging its massive single market to turn European rules into global standards. International companies often adopt these standards worldwide to ensure continued market access.</p>
+            </div>
+            <div class="geo-card">
+                <h4>💻 Escaping "Digital Colonialism"</h4>
+                <p>To avoid being caught between US technological dominance and Chinese hegemonic aspirations, the EU uses regulation to reclaim its digital sovereignty — aiming to lead a "democratic technology" alliance under the narrative of "open strategic autonomy."</p>
+            </div>
+            <div class="geo-card">
+                <h4>🤝 Unified Front</h4>
+                <p>The EU's unique power stems from consensus-based decision-making among 27 nations, creating highly credible laws that are "hard to unbundle" in international negotiations.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🏛️ Values-Based Leadership</h4>
+                <p>Unlike the Beijing effect, which relies on economic dependency, the EU's influence is rooted in transparency and democratic values — offering a third path between market-driven and state-centric models.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-stabilizer">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">🏛️</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 3</div>
+                <h3 class="geo-panel-title">The EU as a Hegemonic System Stabilizer</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>⚠️ A Leadership Vacuum</h4>
+                <p>With the collapse of American hegemonic leadership, the global system faces the risk of a "Kindleberger trap" — where no major power wants to bear the costs of maintaining international order, threatening global stability.</p>
+            </div>
+            <div class="geo-card">
+                <h4>⚔️ Military &amp; Fiscal Evolution</h4>
+                <p>To function as a system stabilizer, the EU must develop a stand-alone military capacity linking economic leadership to hard power. It has crossed historical red lines by adopting joint borrowing to fund military support and crisis recovery.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🚧 Risks and Limitations</h4>
+                <p>Maintaining a rules-based regime is challenging due to the free-rider problem among leading nations. The EU also faces a narrow window of opportunity to step up in trade governance before multilateral institutions fade into irrelevance.</p>
+            </div>
+            <div class="geo-card">
+                <h4>📐 Credible Commitment</h4>
+                <p>The EU's institutional depth and legal frameworks give it credibility as a stabilizing force — but translating economic weight into political influence requires deeper internal cohesion and fiscal integration.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-autonomy">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">🛡️</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 4</div>
+                <h3 class="geo-panel-title">The EU as a Strategic Autonomy Actor</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>🔄 From Normative to Autonomous</h4>
+                <p>The EU is shifting from a purely normative power to one pursuing "open strategic autonomy" — reducing reliance on external powers in security and tech while maintaining international cooperation. Ukraine's invasion triggered a "geopolitical awakening" regarding this need.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🪖 The Defence Dimension</h4>
+                <p>Galvanized by Russian aggression and US unpredictability, the EU endorsed the ReArm Europe plan, aiming to mobilize €800 billion in defense spending. While defense industrial integration has advanced, procurement remains largely national with interoperability gaps.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🔗 Economic Interdependence</h4>
+                <p>The EU balances self-reliance with strategic partnerships, engaging the world from a position of greater strength rather than isolating itself — seeking resilience without decoupling from global markets.</p>
+            </div>
+            <div class="geo-card">
+                <h4>⚡ Internal Tensions</h4>
+                <p>Threat perceptions diverge among member states, making the development of a shared "strategic culture" essential to match the physical hardware of rearmament with political and doctrinal cohesion.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-multilateral">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">🤝</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 5</div>
+                <h3 class="geo-panel-title">The European Union as a Networked Multilateral Power</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>🕸️ Integration &amp; Alliances</h4>
+                <p>The EU uses collaboration, institutional engagement, and alliances rather than unilateral force to exert influence and advance a rules-based order — building webs of cooperation across regions and institutions.</p>
+            </div>
+            <div class="geo-card">
+                <h4>📜 Normative Leadership</h4>
+                <p>Through networks and agreements, the EU spreads norms like sustainability, democracy, and human rights — using soft power and conditionality to shape governance standards globally.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🌍 Global South Tensions</h4>
+                <p>This model faces opposition from the Global South demanding a fairer redistribution of power, as well as perceptions that EU-led initiatives occasionally reflect asymmetrical power dynamics shaped by European interests.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🏗️ Institutional Depth</h4>
+                <p>Unlike unilateral great powers, the EU's multilateral approach gives its commitments institutional durability — making EU agreements harder to reverse and more credible to partner nations over the long term.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-green">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">🌿</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 6</div>
+                <h3 class="geo-panel-title">EU as a Green Transition Leader</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>♻️ Climate as Geopolitics</h4>
+                <p>The EU increasingly uses climate leadership — such as the European Green Deal — as a geopolitical strategy to strengthen economic resilience and energy security alongside its environmental commitments.</p>
+            </div>
+            <div class="geo-card">
+                <h4>⚡ Breaking Russian Dependency</h4>
+                <p>Accelerated by the need to reduce reliance on Russian fossil fuels, the EU is investing heavily in green technologies and clean energy — turning energy security into a driver of the green transition.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🌐 Environmental Diplomacy</h4>
+                <p>By combining environmental governance with diplomacy, the EU aims to shape the global order — positioning climate action as a tool to remain competitive against powers like the US and China.</p>
+            </div>
+            <div class="geo-card">
+                <h4>📈 Industrial Strategy</h4>
+                <p>Green investment is also an industrial strategy: the EU's Carbon Border Adjustment Mechanism (CBAM) links environmental standards to trade policy, raising the floor for global production norms.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-agency">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">📊</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 7</div>
+                <h3 class="geo-panel-title">The Shift to Geopolitical Agency</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>🗣️ Language of Power</h4>
+                <p>The EU has transitioned toward a "geopolitical Commission" focused on "de-risking" supply chains and technological sovereignty in a world of weaponized economic interdependencies.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🔄 Relational Power</h4>
+                <p>The EU exercises "relational power" via trade agreements to maintain global cooperation and act as a system stabilizer — leveraging relationships rather than coercion.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🗺️ Global Europe Priorities</h4>
+                <p>Funding is now driven by "geopolitical conditionality," concentrating on the "European Neighbourhood" and using enlargement as a geostrategic investment in stability and regulatory expansion.</p>
+            </div>
+            <div class="geo-card">
+                <h4>💰 Geofinancial Needs</h4>
+                <p>To be a credible actor, the EU requires robust "geofinancial" tools like common fiscal capacities to bridge its economic size with political influence — closing the gap between market power and strategic clout.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-digital">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">💻</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 8</div>
+                <h3 class="geo-panel-title">The EU as a Digital Sovereignty &amp; Tech Governance Power</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>🔐 Digital Sovereignty</h4>
+                <p>Recognizing technological dependence on the US and China as a vulnerability, the EU has made digital sovereignty a core geopolitical strategy — asserting control over its own digital infrastructure and data flows.</p>
+            </div>
+            <div class="geo-card">
+                <h4>📋 Regulation &amp; Innovation</h4>
+                <p>Frameworks like the DSA and DMA shape the behavior of major tech platforms, while the European Chips Act strengthens technological self-sufficiency and reduces critical supply chain vulnerabilities.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🗂️ Data Governance</h4>
+                <p>The GDPR promotes a model of governance grounded in privacy and public oversight, establishing the EU as a global rule-setter for how personal data is collected, stored, and used.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🤖 A "Human-Centric" Model</h4>
+                <p>The EU positions itself between the US market-driven system and the Chinese state-centric model by promoting ethical technology development and democratic accountability as global governance norms.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="geo-panel" id="tab-geoeconomic">
+        <div class="geo-panel-header">
+            <span class="geo-panel-icon">💶</span>
+            <div>
+                <div class="geo-panel-eyebrow">Role 9</div>
+                <h3 class="geo-panel-title">The EU as a Geo-Economic Power</h3>
+            </div>
+        </div>
+        <div class="geo-grid">
+            <div class="geo-card">
+                <h4>💱 Economic Statecraft</h4>
+                <p>The EU leverages market access, financial controls, and sanctions — as seen with Russia — to achieve foreign policy objectives in a fragmenting global order, turning economic size into political leverage.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🔗 Economic Security</h4>
+                <p>The EU relies on "de-risking," supply chain diversification, and internal industrial policies to reduce strategic dependencies — building resilience without retreating from global integration.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🌐 Global Market Power</h4>
+                <p>Through the "Brussels Effect," the EU acts as a global rule-setter in competition, environmental regulation, and product safety — exporting its standards to markets far beyond European borders.</p>
+            </div>
+            <div class="geo-card">
+                <h4>🗺️ Geostrategic Economics</h4>
+                <p>Investment policies and enlargement (e.g., Ukraine, Western Balkans) are used strategically to secure borders, stabilize regions, and expand regulatory influence. Unlike the US and China, the EU promotes a rules-based, multilateral economic order combining market integration with geopolitical strategy.</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ── GEO TABS ── */
+        .geo-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;}
+        .geo-tab{
+            background:var(--bg-site);border:1px solid var(--border-color);
+            color:var(--text-muted);font-family:var(--sans);font-size:.78rem;
+            font-weight:600;padding:.45rem .85rem;border-radius:20px;cursor:pointer;
+            transition:all .25s;white-space:nowrap;
+        }
+        .geo-tab:hover{border-color:var(--accent-primary);color:var(--accent-primary);}
+        .geo-tab.active{background:var(--accent-primary);border-color:var(--accent-primary);color:#000;}
+        .geo-panel{display:none;}
+        .geo-panel.active{display:block;animation:fadeIn .35s ease;}
+        .geo-panel-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border-color);}
+        .geo-panel-icon{font-size:2.2rem;line-height:1;}
+        .geo-panel-eyebrow{font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-primary);margin-bottom:.2rem;}
+        .geo-panel-title{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--text-main);line-height:1.2;margin:0;}
+    </style>
+
+    <script>
+        document.querySelectorAll('.geo-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.geo-tab').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.geo-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</section>
+
+<section id="references" class="content-block">
+    <h2>References</h2>
+    <p class="ref-note">All sources cited in this presentation — listed in alphabetical order (APA format)</p>
+    <ul class="reference-list">
+        <li>ActionAid. (2025). <em>Multilateralism in a contested world: Power, justice and the EU's interest</em>. <a href="https://actionaid.org/publications/2025/multilateralism-contested-world-power-justice-and-eus-interest">https://actionaid.org/publications/2025/multilateralism-contested-world-power-justice-and-eus-interest</a></li>
+        <li>Ali, A. (2025). Which countries will start using the euro in 2026. <em>Al Jazeera</em>. <a href="https://www.aljazeera.com/news/2025/12/30/which-countries-will-start-using-the-euro-in-2026">https://www.aljazeera.com/news/2025/12/30/which-countries-will-start-using-the-euro-in-2026</a></li>
+        <li>An area of freedom, security and justice: general aspects | Fact Sheets on the European Union | European Parliament. (n.d.). <a href="https://www.europarl.europa.eu/factsheets/en/sheet/150/an-area-of-freedom-security-and-justice-general-aspects">https://www.europarl.europa.eu/factsheets/en/sheet/150/an-area-of-freedom-security-and-justice-general-aspects</a></li>
+        <li>Anghel, V. (2025). Why the EU is a geopolitical power: Wartime enlargement, integration, and reform. <em>Journal of European Public Policy</em>, 1–24. <a href="https://doi.org/10.1080/13501763.2025.2558974">https://doi.org/10.1080/13501763.2025.2558974</a></li>
+        <li>Asylum policy | Fact sheets on the European Union | European Parliament. (n.d.). <a href="https://www.europarl.europa.eu/factsheets/en/sheet/151/asylum-policy">https://www.europarl.europa.eu/factsheets/en/sheet/151/asylum-policy</a></li>
+        <li>Baldwin, R., &amp; Wyplosz, C. (2019). <em>The Economics of European Integration</em> (6th ed.). McGraw-Hill Education. <a href="https://dokumen.pub/the-economics-of-european-integration-6nbsped-9781526847218.html">https://dokumen.pub/the-economics-of-european-integration-6nbsped-9781526847218.html</a></li>
+        <li>Banque de France. (2025, December 15). A 21st member of the euro area for 2026: Bulgaria. <em>EcoNotepad</em>. <a href="https://blocnotesdeleco.banque-france.fr/en/blog-entry/21st-member-euro-area-2026-bulgaria">https://blocnotesdeleco.banque-france.fr/en/blog-entry/21st-member-euro-area-2026-bulgaria</a></li>
+        <li>Bendiek, A., &amp; Stuerzer, I. (2023). The Brussels Effect, European Regulatory Power and Political Capital. <em>Digital Society: Ethics, Socio-Legal and Governance of Digital Technology</em>, <em>2</em>(1), 5. <a href="https://doi.org/10.1007/s44206-022-00031-1">https://doi.org/10.1007/s44206-022-00031-1</a></li>
+        <li>Bercero, I. G., &amp; Poitiers, N. (2025). European economic security strategy. <em>Bruegel Policy Brief</em>. <a href="https://www.bruegel.org/policy-brief/strategy-doctrine-next-steps-european-economic-security">https://www.bruegel.org/policy-brief/strategy-doctrine-next-steps-european-economic-security</a></li>
+        <li>Brodowicz, M. (2026, February 21). The role of the European Union in environmental protection and sustainability policies. <em>Aithor.com</em>. <a href="https://aithor.com/essay-examples/the-role-of-the-european-union-in-environmental-protection-and-sustainability-policies">https://aithor.com/essay-examples/the-role-of-the-european-union-in-environmental-protection-and-sustainability-policies</a></li>
+        <li>Bruegel. (2025, October 27). <em>The crisis of multilateralism between hegemony and multipolarity</em> (Working Paper 25/2025). <a href="https://www.bruegel.org/sites/default/files/2025-10/WP%2025.pdf">https://www.bruegel.org/sites/default/files/2025-10/WP%2025.pdf</a></li>
+        <li>Butler, I. D. J., &amp; OHCHR Regional Office for Europe. (n.d.). <em>The European Union and international human rights law</em>. OHCHR. <a href="https://europe.ohchr.org/sites/default/files/2023-07/EU_and_International_Law.pdf">https://europe.ohchr.org/sites/default/files/2023-07/EU_and_International_Law.pdf</a></li>
+        <li>Chips Act – the EU's plan to overcome semiconductor shortage | Topics | European Parliament. (n.d.). <a href="https://www.europarl.europa.eu/topics/en/article/20230210STO74502/chips-act-the-eu-s-plan-to-overcome-semiconductor-shortage">https://www.europarl.europa.eu/topics/en/article/20230210STO74502/chips-act-the-eu-s-plan-to-overcome-semiconductor-shortage</a></li>
+        <li>Civitas. (2015). Timeline of European integration. <em>Civitas: Institute for the Study of Civil Society</em>. <a href="http://www.civitas.org.uk/eufacts">http://www.civitas.org.uk/eufacts</a></li>
+        <li>Council of the EU. (2020). <em>EU adopts a global human rights sanctions regime</em> [Press release]. <a href="https://www.consilium.europa.eu/press">https://www.consilium.europa.eu/press</a></li>
+        <li>Council of the EU. (2022). <em>European Council conclusions on Ukraine, the membership applications of Ukraine, the Republic of Moldova and Georgia, Western Balkans and external relations</em>. <a href="https://www.consilium.europa.eu/en/press/press-releases/2022/06/23/european-council-conclusions-on-ukraine-the-membership-applications-of-ukraine-the-republic-of-moldova-and-georgia-western-balkans-and-external-relations-23-june-2022/pdf">https://www.consilium.europa.eu/en/press/press-releases/2022/06/23/</a></li>
+        <li>Council of the European Union. (n.d.-a). Sanctions. <a href="https://www.consilium.europa.eu/en/topics/sanctions/">https://www.consilium.europa.eu/en/topics/sanctions/</a></li>
+        <li>Council of the European Union. (n.d.-b). Sanctions: Different types. <a href="https://www.consilium.europa.eu/en/policies/sanctions-different-types/">https://www.consilium.europa.eu/en/policies/sanctions-different-types/</a></li>
+        <li>Council Regulation (EC) No 1/2003 of 16 December 2002 on the implementation of the rules on competition laid down in Articles 81 and 82 of the Treaty. <em>Official Journal L 1</em>, 4 January 2003, p. 1–25. <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32003R0001">https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32003R0001</a></li>
+        <li>Council Regulation (EC) No 139/2004 of 20 January 2004 on the control of concentrations between undertakings (the EC Merger Regulation). <em>Official Journal L 24</em>, 29 January 2004, p. 1–22. <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32004R0139">https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32004R0139</a></li>
+        <li>Crawford, G. (2008). EU human rights and democracy promotion in Central Asia: From lofty principles to lowly self-interests. <em>Perspectives on European Politics and Society</em>, <em>9</em>(2), 172–191. <a href="https://doi.org/10.1080/15705850801999669">https://doi.org/10.1080/15705850801999669</a></li>
+        <li>Digital Markets Act. (2026, April 28). <em>Digital Markets Act (DMA)</em>. <a href="https://digital-markets-act.ec.europa.eu/index_en">https://digital-markets-act.ec.europa.eu/index_en</a></li>
+        <li>Dyson, K., &amp; Maes, I. (2016). <em>Architects of the Euro: Intellectuals in the Making of Monetary European Union</em>. <a href="https://api.pageplace.de/preview/DT0400.9780191054785_A30389774/preview-9780191054785_A30389774.pdf">https://api.pageplace.de/preview/DT0400.9780191054785_A30389774/preview-9780191054785_A30389774.pdf</a></li>
+        <li>ENNHRI. (2026). European Network of National Human Rights Institutions. <a href="https://ennhri.org/">https://ennhri.org/</a></li>
+        <li>EU Action Plan on Human Rights and Democracy. (n.d.). EEAS. <a href="https://www.eeas.europa.eu/eeas/eu-action-plan-human-rights-and-democracy-0_en">https://www.eeas.europa.eu/eeas/eu-action-plan-human-rights-and-democracy-0_en</a></li>
+        <li>EU Geopolitics – Foresight and the EU in a shifting global order. (2026). <em>College of Europe</em>. <a href="https://www.coleurope.eu/eu-geopolitics">https://www.coleurope.eu/eu-geopolitics</a></li>
+        <li>European Central Bank. (n.d.). Monetary policy strategy. <a href="https://www.ecb.europa.eu/mopo/strategy/html/index.en.html">https://www.ecb.europa.eu/mopo/strategy/html/index.en.html</a></li>
+        <li>European Central Bank. (2017). Euro outside Europe. <a href="https://www.ecb.europa.eu/ecb-and-you/explainers/show-me/html/euro_outside_europe.en.html">https://www.ecb.europa.eu/ecb-and-you/explainers/show-me/html/euro_outside_europe.en.html</a></li>
+        <li>European Central Bank. (2025). <em>Economic bulletin: Focus on euro developments</em>. <a href="https://www.ecb.europa.eu/press/economic-bulletin/focus/2026/html/ecb.ebbox202508_01~b4379b735b.en.html">https://www.ecb.europa.eu/press/economic-bulletin/focus/2026/html/ecb.ebbox202508_01~b4379b735b.en.html</a></li>
+        <li>European Central Bank. (2025). <em>The international role of the euro</em>. <a href="https://www.ecb.europa.eu/press/other-publications/ire/html/ecb.ire202506.en.html">https://www.ecb.europa.eu/press/other-publications/ire/html/ecb.ire202506.en.html</a></li>
+        <li>European Central Bank. (2026, January 1). Bulgaria joins the euro area. <a href="https://www.ecb.europa.eu/press/pr/date/2026/html/index.en.html">https://www.ecb.europa.eu/press/pr/date/2026/html/index.en.html</a></li>
+        <li>European Central Bank Banking Supervision. (2026, January 16). Streamlining supervision, safeguarding resilience: ECB's agenda for more effective, efficient and risk-based European banking supervision. <a href="https://www.bankingsupervision.europa.eu/press/pr/date/2026/html/ssm.pr260116~cae937b133.en.html">https://www.bankingsupervision.europa.eu/press/pr/date/2026/html/ssm.pr260116~cae937b133.en.html</a></li>
+        <li>European Chips Act. (2026, April 9). <em>Shaping Europe's Digital Future</em>. <a href="https://digital-strategy.ec.europa.eu/en/policies/european-chips-act">https://digital-strategy.ec.europa.eu/en/policies/european-chips-act</a></li>
+        <li>European Commission. (n.d.-a). Cohesion policy. <a href="https://ec.europa.eu/regional_policy/policy/what/investment-policy_en">https://ec.europa.eu/regional_policy/policy/what/investment-policy_en</a></li>
+        <li>European Commission. (n.d.-b). Price indication directive. <a href="https://commission.europa.eu/law/law-topic/consumer-protection-law/unfair-commercial-practices-and-price-indication/price-indication-directive_en">https://commission.europa.eu/law/law-topic/consumer-protection-law/unfair-commercial-practices-and-price-indication/price-indication-directive_en</a></li>
+        <li>European Commission. (n.d.-c). Trade policy. <a href="https://commission.europa.eu/topics/trade_en">https://commission.europa.eu/topics/trade_en</a></li>
+        <li>European Commission. (2018). <em>Case AT.40099 – Google Android</em> (Decision C(2018) 4761 final). <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:C(2018)4761FINAL">https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:C(2018)4761FINAL</a></li>
+        <li>European Commission. (2020). NextGenerationEU: The EU's plan to emerge stronger from the pandemic. <a href="https://commission.europa.eu/strategy-and-policy/eu-budget/eu-borrower-investor-relations/nextgenerationeu_en">https://commission.europa.eu/strategy-and-policy/eu-budget/eu-borrower-investor-relations/nextgenerationeu_en</a></li>
+        <li>European Commission. (2023). Economic and Monetary Union. <a href="https://economy-finance.ec.europa.eu">https://economy-finance.ec.europa.eu</a></li>
+        <li>European Commission. (2024). The European Green Deal. <a href="https://commission.europa.eu/strategy-and-policy/priorities-2019-2024/european-green-deal_en">https://commission.europa.eu/strategy-and-policy/priorities-2019-2024/european-green-deal_en</a></li>
+        <li>European Commission. (2025). Global Europe and geopolitical priorities. <a href="https://odi.org/en/insights/the-global-europe-proposal-what-does-it-reveal-about-the-eus-geopolitical-priorities/">https://odi.org/en/insights/the-global-europe-proposal-what-does-it-reveal-about-the-eus-geopolitical-priorities/</a></li>
+        <li>European Council. (n.d.). 2004 enlargement: Facts and figures. <a href="https://www.consilium.europa.eu/en/infographics/2004-enlargement-facts-and-figures/">https://www.consilium.europa.eu/en/infographics/2004-enlargement-facts-and-figures/</a></li>
+        <li>European Council. (2025). Energy security and reducing dependence on Russian fossil fuels. <a href="https://www.consilium.europa.eu/en/press/press-releases/2025/10/20/council-agrees-its-position-on-rules-to-phase-out-russian-gas-imports-under-repowereu/">https://www.consilium.europa.eu/en/press/press-releases/2025/10/20/</a></li>
+        <li>European External Action Service. (n.d.). Sanctions: What types. <a href="https://www.eeas.europa.eu/eeas/sanctions-what-types_en">https://www.eeas.europa.eu/eeas/sanctions-what-types_en</a></li>
+        <li>European External Action Service. (2021). EU agenda for a renewed multilateralism. <a href="https://www.eeas.europa.eu/eeas/eu-agenda-renewed-multilateralism-1_en">https://www.eeas.europa.eu/eeas/eu-agenda-renewed-multilateralism-1_en</a></li>
+        <li>European Parliament. (2016). <em>The economic and monetary union</em> (PE 578.970). Directorate-General for Internal Policies. <a href="https://www.europarl.europa.eu/RegData/etudes/IDAN/2016/578970/IPOL_IDA(2016)578970_EN.pdf">https://www.europarl.europa.eu/RegData/etudes/IDAN/2016/578970/IPOL_IDA(2016)578970_EN.pdf</a></li>
+        <li>European Parliament. (2021a). European Social Fund Plus: Helping the most vulnerable [Video]. YouTube. <a href="https://www.youtube.com/watch?v=Xe6e1k-1Dso">https://www.youtube.com/watch?v=Xe6e1k-1Dso</a></li>
+        <li>European Parliament. (2021b). Human rights, the environment and corporate responsibility [Video]. YouTube. <a href="https://www.youtube.com/watch?v=L9uAgxIRCNI">https://www.youtube.com/watch?v=L9uAgxIRCNI</a></li>
+        <li>European Parliament. (2021c). <em>Multilateralism: European Union strategy and role</em>. <a href="https://www.europarl.europa.eu/RegData/etudes/BRIE/2021/689365/EPRS_BRI(2021)689365_EN.pdf">https://www.europarl.europa.eu/RegData/etudes/BRIE/2021/689365/EPRS_BRI(2021)689365_EN.pdf</a></li>
+        <li>European Parliament. (2024a). A road to unity: The EU's history [Video]. YouTube. <a href="https://youtu.be/Oxl4KVBFviE?si=k5F2G3mNEQ_vNrsK">https://youtu.be/Oxl4KVBFviE?si=k5F2G3mNEQ_vNrsK</a></li>
+        <li>European Parliament. (2024b). European Chips Act. <a href="https://www.europarl.europa.eu">https://www.europarl.europa.eu</a></li>
+        <li>European Parliament. (2025). Free movement of persons. <a href="https://www.europarl.europa.eu/factsheets/en/sheet/147/free-movement-of-persons">https://www.europarl.europa.eu/factsheets/en/sheet/147/free-movement-of-persons</a></li>
+        <li>European project funding. (2022, May 9). Reviewing Europe's environmental milestones. <em>Zabala Innovation</em>. <a href="https://www.zabala.eu/news/europe-day-environmental-milestones/">https://www.zabala.eu/news/europe-day-environmental-milestones/</a></li>
+        <li>European Stability Mechanism. (2012). Treaty establishing the European Stability Mechanism (ESM). <a href="https://www.esm.europa.eu/legal-documents">https://www.esm.europa.eu/legal-documents</a></li>
+        <li>European Stability Mechanism. (2024). Annual report. <a href="https://www.esm.europa.eu">https://www.esm.europa.eu</a></li>
+        <li>European Think-Tank Network on China. (2025). <em>Quest for strategic autonomy? Europe grapples with the US-China rivalry</em>. Elcano Royal Institute. <a href="https://www.realinstitutoelcano.org/en/monographs/quest-for-strategic-autonomy-europe-grapples-with-the-us-china-rivalry/">https://www.realinstitutoelcano.org/en/monographs/quest-for-strategic-autonomy-europe-grapples-with-the-us-china-rivalry/</a></li>
+        <li>European Union. (n.d.-a). EU economic and monetary union. EUR-Lex. <a href="https://eur-lex.europa.eu/EN/legal-content/summary/eu-economic-and-monetary-union.html">https://eur-lex.europa.eu/EN/legal-content/summary/eu-economic-and-monetary-union.html</a></li>
+        <li>European Union. (n.d.-b). History of the EU: 2020–today. <a href="https://european-union.europa.eu/principles-countries-history/history-eu/2020-today">https://european-union.europa.eu/principles-countries-history/history-eu/2020-today</a></li>
+        <li>European Union. (n.d.-c). Search all EU institutions and bodies. <a href="https://european-union.europa.eu/institutions-law-budget/institutions-and-bodies/search-all-eu-institutions-and-bodies_en">https://european-union.europa.eu/institutions-law-budget/institutions-and-bodies/search-all-eu-institutions-and-bodies_en</a></li>
+        <li>European Union. (n.d.-d). The history of the European Union. <a href="https://european-union.europa.eu/index_en">https://european-union.europa.eu/index_en</a></li>
+        <li>European Union. (2012a). Consolidated version of the Treaty on European Union. EUR-Lex. <a href="https://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:12012E/TXT:en:PDF">https://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:12012E/TXT:en:PDF</a></li>
+        <li>European Union. (2012b). Consolidated version of the Treaty on the Functioning of the European Union. <em>Official Journal of the European Union, C 326</em>, 47–390. <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:12012E/TXT">https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:12012E/TXT</a></li>
+        <li>European Union. (2026). Achievements and benefits. <a href="https://european-union.europa.eu/principles-countries-history/achievements_en">https://european-union.europa.eu/principles-countries-history/achievements_en</a></li>
+        <li>Ewers-Peters, N. M. (2025). EU-NATO cooperation reloaded: The impact of European strategic autonomy. <em>Defence Studies</em>, <em>25</em>(4), 864–883. <a href="https://doi.org/10.1080/14702436.2025.2562975">https://doi.org/10.1080/14702436.2025.2562975</a></li>
+        <li>Finnish Institute of International Affairs. (n.d.). The EU's quest for geoeconomic power. <a href="https://fiia.fi/en/publication/the-eus-quest-for-geoeconomic-power">https://fiia.fi/en/publication/the-eus-quest-for-geoeconomic-power</a></li>
+        <li>Floridi, L., Cowls, J., Beltrametti, M., Chatila, R., Chazerand, P., Dignum, V., Luetge, C., Madelin, R., Pagallo, U., Rossi, F., Schafer, B., Valcke, P., &amp; Vayena, E. (2018). AI4People—An ethical framework for a good AI society. <em>Minds and Machines</em>, <em>28</em>(4), 689–707. <a href="https://doi.org/10.1007/s11023-018-9482-5">https://doi.org/10.1007/s11023-018-9482-5</a></li>
+        <li>Genini, D. (2025). Restructuring the EU's defence industrial base amid geopolitical shifts. <em>Maastricht Journal of European and Comparative Law</em>. <a href="https://doi.org/10.1177/1023263X251394132">https://doi.org/10.1177/1023263X251394132</a></li>
+        <li>Goldmeier, J. (2025). European migrant crisis. EBSCO. <a href="https://www.ebsco.com/research-starters/history/european-migrant-crisis">https://www.ebsco.com/research-starters/history/european-migrant-crisis</a></li>
+        <li>Hooghe, L., Marks, G., &amp; Schakel, A. (2020). Multilevel governance. <a href="https://hooghe.web.unc.edu/wp-content/uploads/sites/11492/2020/11/2020_hooghe-marks-schakel_multilevel-governance_reduced-size-Caramani.pdf">https://hooghe.web.unc.edu/wp-content/uploads/sites/11492/2020/11/2020_hooghe-marks-schakel_multilevel-governance_reduced-size-Caramani.pdf</a></li>
+        <li>Human Rights &amp; Democracy. (n.d.). EEAS. <a href="https://www.eeas.europa.eu/eeas/human-rights-democracy_en">https://www.eeas.europa.eu/eeas/human-rights-democracy_en</a></li>
+        <li>International Energy Agency. (2024). <em>World energy outlook 2024</em>. <a href="https://www.iea.org/reports/world-energy-outlook-2024">https://www.iea.org/reports/world-energy-outlook-2024</a></li>
+        <li>International Monetary Fund. (2024). Currency composition of official foreign exchange reserves (COFER). <a href="https://data.imf.org/en/news/4225global">https://data.imf.org/en/news/4225global</a></li>
+        <li>Kindleberger, C. P. (1973). <em>The world in depression, 1929–1939</em>. University of California Press.</li>
+        <li>Lane, P. R. (2020). <em>The ECB's monetary policy response to the pandemic: Liquidity, stabilisation and supporting the recovery</em>. European Central Bank. <a href="https://www.bis.org/review/r200715b.pdf">https://www.bis.org/review/r200715b.pdf</a></li>
+        <li>Lowy Institute. (2025, March). A pivotal moment for European strategic autonomy, courtesy of Trump. <a href="https://www.lowyinstitute.org/the-interpreter/pivotal-moment-european-strategic-autonomy-courtesy-trump">https://www.lowyinstitute.org/the-interpreter/pivotal-moment-european-strategic-autonomy-courtesy-trump</a></li>
+        <li>McNamara, K. R. (2025, April 28). The EU in a new geopolitical world order. <em>Real Instituto Elcano</em>. <a href="https://www.realinstitutoelcano.org/en/commentaries/the-eu-in-a-new-geopolitical-world-order/">https://www.realinstitutoelcano.org/en/commentaries/the-eu-in-a-new-geopolitical-world-order/</a></li>
+        <li>McNamara, K. R. (2026). Can Europe sustain a new rules-based geopolitical order? <em>JCMS: Journal of Common Market Studies</em>. <a href="https://doi.org/10.1111/jcms.70089">https://doi.org/10.1111/jcms.70089</a></li>
+        <li>Netherlands Court of Audit. (2024). How has the EU responded to the COVID-19 crisis. <a href="https://english.rekenkamer.nl/topics/e/european-union/closed-topics/how-has-the-eu-responded-to-the-covid-19-crisis">https://english.rekenkamer.nl/topics/e/european-union/closed-topics/how-has-the-eu-responded-to-the-covid-19-crisis</a></li>
+        <li>Oberthür, S., &amp; Dupont, C. (2021). The European Union's international climate leadership: Towards a grand climate strategy? <em>Journal of European Public Policy</em>. <a href="https://www.tandfonline.com/doi/full/10.1080/13501763.2021.1918218">https://www.tandfonline.com/doi/full/10.1080/13501763.2021.1918218</a></li>
+        <li>ODI. (2026, April 24). The Global Europe proposal: What does it reveal about the EU's geopolitical priorities? <a href="https://odi.org/en/insights/the-global-europe-proposal-what-does-it-reveal-about-the-eus-geopolitical-priorities/">https://odi.org/en/insights/the-global-europe-proposal-what-does-it-reveal-about-the-eus-geopolitical-priorities/</a></li>
+        <li>Politico. (2025, December 6). EU institutions agree on 2026 legislative priorities. <em>Politico Europe</em>. <a href="https://www.politico.eu/article/eu-2026-legislative-priorities">https://www.politico.eu/article/eu-2026-legislative-priorities</a></li>
+        <li>ResearchGate. (2025). Diplomatic realisation of the EU's geoeconomic pivot: Sanctions, trade and development policy reform. <a href="https://www.researchgate.net/publication/398959432">https://www.researchgate.net/publication/398959432</a></li>
+        <li>Rieker, P., &amp; Giske, M. T. E. (2024). <em>European actorness in a shifting geopolitical order: European strategic autonomy through differentiated integration</em>. Springer. <a href="https://doi.org/10.1007/978-3-031-44546-0">https://doi.org/10.1007/978-3-031-44546-0</a></li>
+        <li>Rodel, A. (2025). Europe's quest for strategic autonomy in response to Trumpism. <em>Zeitschrift für Außen- und Sicherheitspolitik</em>. <a href="https://doi.org/10.1007/s43508-025-00133-9">https://doi.org/10.1007/s43508-025-00133-9</a></li>
+        <li>Sapir, A. (2022). Ukraine and the EU: Enlargement at a new crossroads. <em>Intereconomics</em>. <a href="https://www.intereconomics.eu/contents/year/2022/number/4/article/ukraine-and-the-eu-enlargement-at-a-new-crossroads.html">https://www.intereconomics.eu/contents/year/2022/number/4/article/ukraine-and-the-eu-enlargement-at-a-new-crossroads.html</a></li>
+        <li>Schengen: A guide to the European border-free zone | Topics | European Parliament. (n.d.). <a href="https://www.europarl.europa.eu/topics/en/article/20190612STO54307/schengen-a-guide-to-the-european-border-free-zone">https://www.europarl.europa.eu/topics/en/article/20190612STO54307/schengen-a-guide-to-the-european-border-free-zone</a></li>
+        <li>Schimmelfennig, F. (2015). Liberal intergovernmentalism and the crises of the EU. <em>Journal of European Public Policy</em>. <a href="https://doi.org/10.1080/13501763.2014.994020">https://doi.org/10.1080/13501763.2014.994020</a></li>
+        <li>Sliwinski, K. (2026). The European Union as a geopolitical actor: Towards a pragmatic-normative agenda. <em>Global Geopolitics</em>, <em>1</em>(1), 113–145. <a href="https://scholars.hkbu.edu.hk/en/publications/the-european-union-as-a-geopolitical-actor-towards-a-pragmatic-no/">https://scholars.hkbu.edu.hk/en/publications/the-european-union-as-a-geopolitical-actor-towards-a-pragmatic-no/</a></li>
+        <li>Špelić, I., &amp; Mihelić-Bogdanić, A. (2024). EU environmental protection in regard to sustainable development: Myth or reality? <em>Standards</em>, <em>4</em>(4), 176–195. <a href="https://doi.org/10.3390/standards4040010">https://doi.org/10.3390/standards4040010</a></li>
+        <li>Steinberg, F., &amp; Cardoso Reis, B. (2025, April 30). The emergence of a new global trading order? Scenarios for global trade and the EU's role. <em>Real Instituto Elcano</em>. <a href="https://www.realinstitutoelcano.org/en/analyses/the-emergence-of-a-new-global-trading-order-scenarios-for-global-trade-and-the-eus-role/">https://www.realinstitutoelcano.org/en/analyses/the-emergence-of-a-new-global-trading-order-scenarios-for-global-trade-and-the-eus-role/</a></li>
+        <li>Steinberg, F., &amp; Powell, C. (2026, January 13). The G20 without the US: Multilateralism after hegemony? <em>Real Instituto Elcano</em>. <a href="https://www.realinstitutoelcano.org/en/commentaries/the-g20-without-the-us-multilateralism-after-hegemony/">https://www.realinstitutoelcano.org/en/commentaries/the-g20-without-the-us-multilateralism-after-hegemony/</a></li>
+        <li>The 2030 Agenda and the Sustainable Development Goals: A European perspective to respect, protect and fulfil the United Convention on the Rights of Persons with Disabilities. (2018). In <em>European Human Rights Report</em>.</li>
+        <li>The European Union as a geopolitical actor. Springer. <a href="https://link.springer.com/chapter/10.1007/978-3-032-18648-5_2">https://link.springer.com/chapter/10.1007/978-3-032-18648-5_2</a></li>
+        <li>The Norwegian Nobel Committee. (2012). The Nobel Peace Prize for 2012. Jean Monnet Foundation for Europe.</li>
+        <li>UN ESCWA. (n.d.). Acquis communautaire. <a href="https://www.unescwa.org/sd-glossary/acquis-communautaire">https://www.unescwa.org/sd-glossary/acquis-communautaire</a></li>
+        <li>World Economic Forum &amp; European Council on Foreign Relations. (2025). <em>Open but secure: Europe's path to strategic interdependence</em>. WEF. <a href="https://reports.weforum.org/docs/WEF_Open_but_Secure_Europe%E2%80%99s_Path_to_Strategic_Interdependence_2025.pdf">https://reports.weforum.org/docs/WEF_Open_but_Secure_Europe%E2%80%99s_Path_to_Strategic_Interdependence_2025.pdf</a></li>
+        <li>Wouters, J., &amp; De Ridder, M. (2021). <em>Promotion of rule of law and democratic legitimacy in the European Union</em> (pp. 6–7, 10–11, 25). <a href="https://www.interacademies.org/sites/default/files/2022-05/mw_ruleoflaw_EN.pdf">https://www.interacademies.org/sites/default/files/2022-05/mw_ruleoflaw_EN.pdf</a></li>
+    </ul>
+</section>
+
+</div><footer><p>&copy; Year 3-R II European Politics and Governance</p></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════
+// HERO IMAGE — uses 1.jpg (place in same folder as this HTML)
+// ═══════════════════════════════════════
+document.getElementById('heroBg').style.backgroundImage = "url('eu_bg.jpg')";
+
+// ═══════════════════════════════════════
+// HELPER: returns the correct filename for a given image number
+// FIX: image 6 is 6.jpeg; all others are .jpg
+// ═══════════════════════════════════════
+function imgSrc(num) {
+    return num === '6' ? '6.jpeg' : num + '.jpg';
+}
+
+// ═══════════════════════════════════════
+// SNAPSHOT DATA
+// Image mapping:
+//   1.jpg  = Port/container terminal    → Internal Market & Customs Union
+//   2.jpg  = Euro symbol sculpture      → The Euro & Banking Union
+//   3.jpg  = EU humanitarian aid        → 70+ Years of Harmony (Peace)
+//   4.jpg  = Airport passport control   → The Schengen Area
+//   5.jpg  = European Court building    → Charter of Fundamental Rights
+//   6.jpeg = Solar farm (aerial)        → Closing the Development Gap (Cohesion)
+//   7.jpg  = Climate Law infographic    → The European Green Deal
+//   8.jpg  = Apple/EU charger image     → World's Largest Trade Bloc
+//   9.jpg  = Frontex/Polizei officer    → Area of Freedom, Security & Justice
+// ═══════════════════════════════════════
+const SNAPS = [
+  {
+    id:'market',
+    icon:'🏪',
+    imageNum: '1',
+    year:'1968 – Present',
+    title:'Internal Market & Customs Union',
+    tag:'Economy', tagColor:'#3B82F6',
+    gradient:'linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%)',
+    eyebrow:'The Foundation of Economic Integration',
+    detailTitle:'450 Million Consumers — €2.3 Trillion GDP Boost',
+    stat:'<strong>450 million</strong> consumers &nbsp;·&nbsp; <strong>€2.3 trillion</strong> additional GDP since 1992 &nbsp;·&nbsp; <strong>€30 billion+</strong> in competition fines since 2000',
+    body:'<p>The EU transformed the post-war trading zone into a single economy of 450 million consumers, generating an additional €2.3 trillion in GDP since 1992. The <strong>Single Market</strong> guarantees the four freedoms: free movement of goods, services, capital, and labour, allowing GDP to grow from roughly 20% of the economy in 1993 to over 35% today.</p><p>The <strong>Customs Union</strong> (since 1968) eliminated all internal duties and set a common external tariff, ensuring a container entering at Rotterdam circulates freely through Rome or Berlin without further checks. To protect this market, the EU enforces world-leading <strong>Competition Policy</strong>, issuing over €30 billion in fines since 2000 against giants like Google and Apple to prevent market distortion and illegal state aid.</p>'
+  },
+  {
+    id:'euro',
+    icon:'💶',
+    imageNum: '2',
+    year:'2002 – Present',
+    title:'The Euro & Banking Union',
+    tag:'Monetary Union', tagColor:'#0EA5E9',
+    gradient:'linear-gradient(135deg,#0c4a6e 0%,#0369a1 60%,#0ea5e9 100%)',
+    eyebrow:'Pillars of Monetary Union',
+    detailTitle:'World\'s 2nd Most Traded Currency — 20 Member States',
+    stat:'<strong>31%</strong> of global payments &nbsp;·&nbsp; <strong>20%</strong> of global reserves &nbsp;·&nbsp; <strong>€30 billion</strong> annual transaction savings &nbsp;·&nbsp; <strong>€66 billion</strong> bank resolution fund',
+    body:'<p>The <strong>Euro</strong>, introduced for cash use in 2002, is now adopted by 20 member states and accounts for 31% of global payments and 20% of global reserves. It eliminates exchange rate volatility and conversion fees, providing approximately €30 billion in annual transaction savings for businesses and citizens.</p><p>The <strong>Banking Union</strong>, established after the 2008–2012 debt crisis, centralises supervision through the <strong>Single Supervisory Mechanism (SSM)</strong>, which directly monitors over 115 of the largest banks. The <strong>Single Resolution Mechanism (SRM)</strong> ensures failing banks are wound down in an orderly manner using a €66 billion fund financed by bank levies — protecting taxpayers from the toxic bailouts of the past.</p>'
+  },
+  {
+    id:'peace',
+    icon:'🕊️',
+    imageNum: '3',
+    year:'1945 – Present',
+    title:'70+ Years of Harmony',
+    tag:'Peace & Security', tagColor:'#10B981',
+    gradient:'linear-gradient(135deg,#064e3b 0%,#065f46 60%,#0f766e 100%)',
+    eyebrow:'The EU\'s Legacy of Peace & Stability',
+    detailTitle:'Nobel Peace Prize 2012 — €17 Billion Security Fund',
+    stat:'<strong>70+</strong> years of peace between member states &nbsp;·&nbsp; <strong>1,000+</strong> global peace projects &nbsp;·&nbsp; <strong>€6.1 billion</strong> military support to Ukraine',
+    body:'<p>The EU\'s most profound achievement is fostering over 70 years of peace, recognised by the <strong>Nobel Peace Prize</strong> in 2012. By building a framework of economic interdependence and shared institutions, the Union made war between member states "unthinkable." Beyond its borders, the <strong>Service for Foreign Policy Instruments (FPI)</strong> has financed over 1,000 projects worldwide to mediate conflicts and implement peace agreements.</p><p>The <strong>European Peace Facility (EPF)</strong>, with a financial ceiling grown to over €17 billion, allows the EU to procure and deliver military equipment directly to partner nations. It has been critical in providing over €6.1 billion in military support to Ukraine to counter Russian aggression while safeguarding the territorial integrity of global partners.</p>'
+  },
+  {
+    id:'schengen',
+    icon:'🛂',
+    imageNum: '4',
+    year:'1995 – Present',
+    title:'The Schengen Area',
+    tag:'Open Borders', tagColor:'#0891b2',
+    gradient:'linear-gradient(135deg,#0c4a6e 0%,#0e7490 60%,#0891b2 100%)',
+    eyebrow:'The Freedom of People',
+    detailTitle:'425 Million People — Passport-Free Travel',
+    stat:'<strong>425 million</strong> people &nbsp;·&nbsp; <strong>1.7 million</strong> daily cross-border commuters &nbsp;·&nbsp; Full integration for Bulgaria & Romania: <strong>Jan 2025</strong>',
+    body:'<p>The <strong>Schengen Area</strong> is the physical manifestation of EU citizenship, having abolished internal border checks for over 425 million people across most of the continent. As of 1 January 2025, the area achieved full integration for <strong>Bulgaria and Romania</strong> after internal land border checks were officially lifted.</p><p>This integration facilitates daily life for approximately <strong>1.7 million workers</strong> who commute across borders every day. The <strong>Schengen Information System (SIS)</strong> and the <strong>Frontex</strong> agency coordinate external border controls and combat transnational crime. The <strong>European Health Insurance Card</strong> and the end of mobile roaming rules further enable seamless cross-border living at no extra cost.</p>'
+  },
+  {
+    id:'rights',
+    icon:'⚖️',
+    imageNum: '5',
+    year:'2009 – Present',
+    title:'Charter of Fundamental Rights',
+    tag:'Human Rights', tagColor:'#8B5CF6',
+    gradient:'linear-gradient(135deg,#3b0764 0%,#6d28d9 60%,#7c3aed 100%)',
+    eyebrow:'Human Rights & Democracy Promotion',
+    detailTitle:'European Magnitsky Act — €1.5 Billion Aid Fund',
+    stat:'Charter legally binding since <strong>2009</strong> &nbsp;·&nbsp; <strong>€1.5 billion</strong> NDICI fund (2021–2027) &nbsp;·&nbsp; World\'s leading humanitarian donor',
+    body:'<p>The EU enshrines values of human dignity, freedom, and rule of law through the <strong>Charter of Fundamental Rights</strong>, which became legally binding in 2009. The Union serves as the world\'s leading humanitarian donor and primary supporter of the <strong>International Criminal Court (ICC)</strong>. Through <strong>NDICI-Global Europe</strong>, the EU allocated €1.5 billion for 2021–2027 to assist civil society and democratic stakeholders globally.</p><p>The <strong>EU Global Human Rights Sanctions Regime</strong> (the European Magnitsky Act) targets individuals responsible for genocide, torture, or slavery through asset freezes and travel bans. The <strong>Copenhagen Criteria</strong> ensure any joining country meets strict standards of democracy, while annual <strong>Rule of Law</strong> reports monitor compliance among current member states.</p>'
+  },
+  {
+    id:'cohesion',
+    icon:'📊',
+    imageNum: '6',
+    year:'1988 – Present',
+    title:'Closing the Development Gap',
+    tag:'Regional Development', tagColor:'#14B8A6',
+    gradient:'linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%)',
+    eyebrow:'Regional Development & Cohesion Policy',
+    detailTitle:'€392 Billion Budget — 40% GDP Growth in Poland',
+    stat:'<strong>€392 billion</strong> budget 2021–2027 &nbsp;·&nbsp; Poland: GDP per capita from <strong>39%</strong> to <strong>79%</strong> of EU average &nbsp;·&nbsp; 30% of funds support climate goals',
+    body:'<p>The <strong>Cohesion Policy</strong> — with a budget of €392 billion for 2021–2027, roughly one-third of the total EU budget — focuses on less developed regions to reduce economic, social, and territorial disparities. A prime example is <strong>Poland</strong>, which joined in 2004 with GDP per capita at 39% of the EU average and rose to 79% by 2022.</p><p>The policy operates through the <strong>European Regional Development Fund</strong> for city investment, the <strong>Cohesion Fund</strong> for environment and transport, the <strong>European Social Fund Plus</strong> for job creation, and the <strong>Just Transition Fund</strong> to support regions moving away from coal mining. Today, 30% of all cohesion funds are required to support climate objectives.</p>'
+  },
+  {
+    id:'climate',
+    icon:'🌿',
+    imageNum: '7',
+    year:'2019 – 2050',
+    title:'The European Green Deal',
+    tag:'Climate & Environment', tagColor:'#22C55E',
+    gradient:'linear-gradient(135deg,#052e16 0%,#166534 60%,#15803d 100%)',
+    eyebrow:'Environmental Protection',
+    detailTitle:'First Climate-Neutral Continent — 24% Emission Reduction',
+    stat:'<strong>55%</strong> emissions cut target by 2030 &nbsp;·&nbsp; <strong>24%</strong> reduction 1990–2019 &nbsp;·&nbsp; Up to <strong>10 years</strong> imprisonment for environmental crime',
+    body:'<p>The EU set the world\'s most ambitious climate targets, aiming to become the <strong>first climate-neutral continent by 2050</strong>. The <strong>European Climate Law (2021)</strong> turned this into a legal obligation, requiring at least 55% net emission cuts by 2030. EU emissions decreased by 24% between 1990 and 2019, with energy-related CO₂ declining by nearly 9% in 2023 alone.</p><p>The <strong>Environmental Crime Directive (2024)</strong> introduced penalties of up to 10 years imprisonment for acts causing serious damage to ecosystems. The <strong>Emissions Trading Scheme (ETS)</strong> and green finance standards shift funding toward sustainable industries. Internationally, the EU played a key role in adopting the <strong>Paris Agreement</strong> in 2015.</p>'
+  },
+  {
+    id:'trade',
+    icon:'🌍',
+    imageNum: '8',
+    year:'1957 – Present',
+    title:'World\'s Largest Trade Bloc',
+    tag:'Trade & Global Power', tagColor:'#F59E0B',
+    gradient:'linear-gradient(135deg,#78350f 0%,#b45309 60%,#d97706 100%)',
+    eyebrow:'Trade Power & Global Influence',
+    detailTitle:'16% of World Trade — 80 Global Agreements',
+    stat:'<strong>15–16%</strong> of world goods trade &nbsp;·&nbsp; Largest <strong>services trader</strong> globally &nbsp;·&nbsp; Agreements with <strong>80+ countries</strong>',
+    body:'<p>The European Union accounts for approximately 15–16% of the world\'s trade in goods and serves as the <strong>largest trader of services</strong> globally. Its economic size allows it to shape international economic policies. By negotiating as a single bloc, the EU leverages its 450 million consumers to maintain trade agreements with approximately <strong>80 countries</strong> worldwide.</p><p>The EU\'s influence goes beyond volume: it is a global <strong>"rules-maker"</strong> that sets international benchmarks for product safety, labour rights, and environmental standards. Many international firms adjust their global policies to meet EU standards to avoid being locked out of the continent — ensuring global trade is increasingly aligned with consumer safety and sustainability.</p>'
+  },
+  {
+    id:'justice',
+    icon:'🛡️',
+    imageNum: '9',
+    year:'1999 – Present',
+    title:'Area of Freedom, Security & Justice',
+    tag:'Justice & Security', tagColor:'#EC4899',
+    gradient:'linear-gradient(135deg,#500724 0%,#9d174d 60%,#be185d 100%)',
+    eyebrow:'Justice & Security Cooperation',
+    detailTitle:'Unified Law Enforcement — Cross-Border Judicial Protection',
+    stat:'<strong>Europol</strong> + <strong>Eurojust</strong> + <strong>EPPO</strong> &nbsp;·&nbsp; Uniform asylum rules across all member states &nbsp;·&nbsp; Court decisions recognised across borders',
+    body:'<p>The <strong>Area of Freedom, Security and Justice (AFSJ)</strong> ensures EU citizens can move freely, live safely, and access justice easily. It centralises security through <strong>Europol</strong> for police cooperation and <strong>Eurojust</strong> for judicial coordination, enabling member states to share information to catch criminals and combat terrorism. The <strong>European Public Prosecutor\'s Office (EPPO)</strong> investigates crimes against the EU\'s financial interests.</p><p>The EU has developed a comprehensive <strong>Asylum Policy</strong> with uniform rules across all member states. The <strong>Temporary Protection Directive (2001)</strong> provides immediate aid to refugees fleeing crises, ensuring similar treatment across the Union and encouraging solidarity. These frameworks ensure everyone\'s rights are protected and that court decisions are recognised and respected across borders.</p>'
+  },
+];
+
+// ═══════════════════════════════════════
+// BUILD SNAPSHOT CARDS
+// ═══════════════════════════════════════
+const strip = document.getElementById('snapStrip');
+const detail = document.getElementById('snapDetail');
+const detailInner = document.getElementById('snapDetailInner');
+let activeSnap = null;
+
+SNAPS.forEach((s,i) => {
+    const card = document.createElement('div');
+    card.className = 'snap-card';
+    card.dataset.id = s.id;
+
+    // FIX: use imgSrc() helper to get correct extension (6.jpeg vs N.jpg)
+    card.style.backgroundImage = `url('${imgSrc(s.imageNum)}')`;
+
+    card.innerHTML = `
+        <div class="snap-card-top-bar" style="background:${s.tagColor}"></div>
+        <div class="snap-card-inner">
+            <div class="snap-icon">${s.icon}</div>
+            <div class="snap-year">${s.year}</div>
+            <div class="snap-title">${s.title}</div>
+            <span class="snap-tag" style="background:${s.tagColor}88">${s.tag}</span>
+        </div>`;
+    card.addEventListener('click', () => openSnap(s, card));
+    strip.appendChild(card);
+});
+
+function openSnap(s, cardEl) {
+    if (activeSnap === s.id) {
+        activeSnap = null;
+        detail.classList.remove('open');
+        document.querySelectorAll('.snap-card').forEach(c => c.classList.remove('active'));
+        return;
+    }
+    activeSnap = s.id;
+    document.querySelectorAll('.snap-card').forEach(c => c.classList.remove('active'));
+    cardEl.classList.add('active');
+
+    // FIX: use imgSrc() helper here too
+    detailInner.innerHTML = `
+        <div class="snap-detail-left">
+            <div class="snap-detail-eyebrow">${s.eyebrow}</div>
+            <div class="snap-detail-title">${s.detailTitle}</div>
+            <div class="snap-detail-image-wrap">
+                <img src="${imgSrc(s.imageNum)}" class="snap-detail-image" alt="${s.title}" />
+            </div>
+            <div class="snap-detail-stat">${s.stat}</div>
+            <button class="snap-close" onclick="closeSnap()">✕ Close</button>
+        </div>
+        <div class="snap-detail-right">
+            <div class="snap-detail-body">${s.body}</div>
+        </div>`;
+
+    detail.classList.add('open');
+    setTimeout(() => detail.scrollIntoView({behavior:'smooth', block:'nearest'}), 350);
+}
+
+function closeSnap() {
+    activeSnap = null;
+    detail.classList.remove('open');
+    document.querySelectorAll('.snap-card').forEach(c => c.classList.remove('active'));
+}
+
+const SCROLL_AMT = 440;
+document.getElementById('snapPrev').addEventListener('click', () => { strip.scrollBy({left:-SCROLL_AMT, behavior:'smooth'}); });
+document.getElementById('snapNext').addEventListener('click', () => { strip.scrollBy({left:SCROLL_AMT, behavior:'smooth'}); });
+
+// ═══════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════
+const themeBtn=document.getElementById('themeToggle'), rootEl=document.documentElement;
+const darkTiles='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const lightTiles='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const map=L.map('map',{center:[52,12],zoom:4,minZoom:3,maxZoom:7,zoomControl:false});
+L.control.zoom({position:'bottomright'}).addTo(map);
+let tileLayer=L.tileLayer(darkTiles,{attribution:'&copy; <a href="https://carto.com/">CartoDB</a>'}).addTo(map);
+themeBtn.addEventListener('click',()=>{
+  if(rootEl.getAttribute('data-theme')!=='light'){rootEl.setAttribute('data-theme','light');themeBtn.innerText='🌙 Dark Mode';tileLayer.setUrl(lightTiles);}
+  else{rootEl.setAttribute('data-theme','dark');themeBtn.innerText='☀️ Light Mode';tileLayer.setUrl(darkTiles);}
+  updateTimeline();
+});
+
+// ═══════════════════════════════════════
+// MAP DATA
+// ═══════════════════════════════════════
+const DATA={
+  BE:{name:"Belgium",eu:1958,euro:1999,schengen:1995},FR:{name:"France",eu:1958,euro:1999,schengen:1995},
+  DE:{name:"Germany",eu:1958,euro:1999,schengen:1995},IT:{name:"Italy",eu:1958,euro:1999,schengen:1997},
+  LU:{name:"Luxembourg",eu:1958,euro:1999,schengen:1995},NL:{name:"Netherlands",eu:1958,euro:1999,schengen:1995},
+  DK:{name:"Denmark",eu:1973,euro:0,schengen:2001},IE:{name:"Ireland",eu:1973,euro:1999,schengen:0},
+  GB:{name:"United Kingdom",eu:1973,exit:2020,euro:0,schengen:0},
+  GR:{name:"Greece",eu:1981,euro:2001,schengen:2000},PT:{name:"Portugal",eu:1986,euro:1999,schengen:1995},
+  ES:{name:"Spain",eu:1986,euro:1999,schengen:1995},AT:{name:"Austria",eu:1995,euro:1999,schengen:1997},
+  FI:{name:"Finland",eu:1995,euro:1999,schengen:2001},SE:{name:"Sweden",eu:1995,euro:0,schengen:2001},
+  CY:{name:"Cyprus",eu:2004,euro:2008,schengen:0},CZ:{name:"Czech Republic",eu:2004,euro:0,schengen:2007},
+  EE:{name:"Estonia",eu:2004,euro:2011,schengen:2007},HU:{name:"Hungary",eu:2004,euro:0,schengen:2007},
+  LV:{name:"Latvia",eu:2004,euro:2014,schengen:2007},LT:{name:"Lithuania",eu:2004,euro:2015,schengen:2007},
+  MT:{name:"Malta",eu:2004,euro:2008,schengen:2007},PL:{name:"Poland",eu:2004,euro:0,schengen:2007},
+  SK:{name:"Slovakia",eu:2004,euro:2009,schengen:2007},SI:{name:"Slovenia",eu:2004,euro:2007,schengen:2007},
+  BG:{name:"Bulgaria",eu:2007,euro:2026,schengen:2024},RO:{name:"Romania",eu:2007,euro:0,schengen:2024},
+  HR:{name:"Croatia",eu:2013,euro:2023,schengen:2023},NO:{name:"Norway",eu:0,euro:0,schengen:2001},
+  IS:{name:"Iceland",eu:0,euro:0,schengen:2001},CH:{name:"Switzerland",eu:0,euro:0,schengen:2008},
+  LI:{name:"Liechtenstein",eu:0,euro:0,schengen:2011},UA:{name:"Ukraine",eu:0,euro:0,schengen:0,candidate:2022},
+  MD:{name:"Moldova",eu:0,euro:0,schengen:0,candidate:2022},GE:{name:"Georgia",eu:0,euro:0,schengen:0,perspective:2022}
+};
+const EVENTS={
+  1950:"<strong style='color:var(--accent-primary)'>Schuman Declaration:</strong> Proposes European coal and steel unity.",
+  1951:"<strong style='color:var(--accent-primary)'>Treaty of Paris:</strong> Created the European Coal and Steel Community (ECSC).",
+  1957:"<strong style='color:var(--accent-primary)'>Treaties of Rome:</strong> Created the Common Market (EEC) and Euratom; introduced the Four Freedoms.",
+  1958:"<strong style='color:var(--accent-primary)'>EU Founders:</strong> Belgium, France, Germany, Italy, Luxembourg, and the Netherlands officially begin.",
+  1967:"<strong style='color:var(--accent-primary)'>Merger Treaty:</strong> Unified ECSC, EEC, and Euratom into the European Communities.",
+  1968:"<strong style='color:var(--accent-primary)'>Customs Union:</strong> EEC establishes a full customs union.",
+  1973:"<strong style='color:var(--accent-primary)'>First Enlargement:</strong> The UK, Ireland, and Denmark join.",
+  1981:"<strong style='color:var(--accent-primary)'>Enlargement:</strong> Greece joins the EU.",
+  1985:"<strong style='color:var(--accent-primary)'>Schengen Agreement:</strong> Signed to begin border-free travel.",
+  1986:"<strong style='color:var(--accent-primary)'>Single European Act:</strong> Introduced QMV. Spain and Portugal join.",
+  1992:"<strong style='color:var(--accent-primary)'>Maastricht Treaty:</strong> Formally created the European Union.",
+  1995:"<strong style='color:var(--accent-primary)'>Enlargement &amp; Schengen:</strong> Austria, Sweden, Finland join. Schengen begins.",
+  1997:"<strong style='color:var(--accent-primary)'>Treaty of Amsterdam:</strong> Modernized EU institutions.",
+  1999:"<strong style='color:var(--accent-primary)'>The Euro:</strong> Introduced electronically in 11 countries.",
+  2000:"<strong style='color:var(--accent-primary)'>Schengen Expansion:</strong> Greece joins the Schengen Area.",
+  2001:"<strong style='color:var(--accent-primary)'>Treaty of Nice:</strong> Prepared EU for expansion. Greece joins Eurozone.",
+  2002:"<strong style='color:var(--accent-primary)'>The Euro:</strong> Banknotes &amp; coins enter circulation across 12 countries.",
+  2004:"<strong style='color:var(--accent-primary)'>'Big Bang' Enlargement:</strong> 10 new countries join the EU.",
+  2007:"<strong style='color:var(--accent-primary)'>Lisbon Treaty (agreed):</strong> Romania &amp; Bulgaria join. Slovenia joins Eurozone.",
+  2008:"<strong style='color:var(--accent-primary)'>Eurozone &amp; Schengen:</strong> Cyprus and Malta join Eurozone. Switzerland joins Schengen.",
+  2009:"<strong style='color:var(--accent-primary)'>Lisbon Treaty:</strong> Enters into force. Charter of Fundamental Rights becomes binding.",
+  2011:"<strong style='color:var(--accent-primary)'>Eurozone &amp; Schengen:</strong> Estonia joins Eurozone. Liechtenstein joins Schengen.",
+  2013:"<strong style='color:var(--accent-primary)'>Enlargement:</strong> Croatia joins as the 28th member state.",
+  2014:"<strong style='color:var(--accent-primary)'>Eurozone:</strong> Latvia adopts the euro.",
+  2015:"<strong style='color:var(--accent-primary)'>Eurozone:</strong> Lithuania adopts the euro.",
+  2020:"<strong style='color:var(--accent-primary)'>NextGenerationEU &amp; Brexit:</strong> &euro;750bn recovery fund. UK formally leaves the EU.",
+  2022:"<strong style='color:var(--accent-primary)'>Candidate Status:</strong> Ukraine &amp; Moldova granted Candidate Status.",
+  2023:"<strong style='color:var(--accent-primary)'>Integration:</strong> Croatia joins Schengen and Eurozone.",
+  2024:"<strong style='color:var(--accent-primary)'>Accession &amp; Schengen:</strong> Ukraine accession talks begin. Romania &amp; Bulgaria join full Schengen.",
+  2025:"<strong style='color:var(--accent-primary)'>Ukraine:</strong> Completes full screening of all EU laws and standards.",
+  2026:"<strong style='color:var(--accent-primary)'>2026 Declaration:</strong> Defence Readiness by 2030. Bulgaria joins Eurozone."
+};
+
+let geojsonLayer,currentYear=1957,selectedIso=null;
+function gc(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function getColor(iso){
+  const d=DATA[iso];if(!d)return gc('--none-color');
+  if(d.exit&&currentYear>=d.exit)return gc('--former-color');
+  if(d.euro&&currentYear>=d.euro)return gc('--euro-color');
+  if(d.eu&&currentYear>=d.eu)return gc('--eu-color');
+  if(d.schengen&&currentYear>=d.schengen)return gc('--schengen-color');
+  if(d.candidate&&currentYear>=d.candidate)return gc('--candidate-color');
+  if(d.perspective&&currentYear>=d.perspective)return gc('--perspective-color');
+  return gc('--none-color');
+}
+function style(f){
+  const iso=f.properties.iso_a2,sel=iso===selectedIso;
+  return{fillColor:getColor(iso),weight:sel?3:1,opacity:1,color:sel?gc('--accent-primary'):gc('--border-highlight'),fillOpacity:sel?1:0.85};
+}
+function updateTimeline(){
+  document.getElementById('yearVal').innerText=currentYear;
+  document.getElementById('overlayYear').innerText=currentYear;
+  let txt="Integration and policy development continues.",nearest=1950;
+  for(let y in EVENTS){if(y<=currentYear&&y>=nearest){txt=EVENTS[y];nearest=y;}}
+  document.getElementById('eventBox').innerHTML=`<div style="margin-bottom:5px;color:var(--text-muted);font-family:var(--mono);font-size:.7rem;letter-spacing:2px;">YEAR ${nearest}</div>${txt}`;
+  if(geojsonLayer)geojsonLayer.setStyle(style);
+  let count=Object.values(DATA).filter(c=>c.eu<=currentYear&&c.eu!==0&&(!c.exit||currentYear<c.exit)).length;
+  document.getElementById('overlayCount').innerText=`${count} Member States`;
+  if(selectedIso)showInfo(selectedIso);
+}
+function showInfo(iso){
+  selectedIso=iso;if(geojsonLayer)geojsonLayer.setStyle(style);
+  const d=DATA[iso];
+  if(!d){document.getElementById('placeholder').style.display='block';document.getElementById('countryDetail').style.display='none';return;}
+  document.getElementById('placeholder').style.display='none';
+  const el=document.getElementById('countryDetail');el.style.display='block';
+  let badges='';
+  // FIX: was "c.exit" (undefined variable) — corrected to "d.exit"
+  if(d.eu&&currentYear>=d.eu&&(!d.exit||currentYear<d.exit))badges+=`<span class="badge bg-eu">EU Member (Since ${d.eu})</span>`;
+  else if(d.exit&&currentYear>=d.exit)badges+=`<span class="badge bg-former">Former Member</span>`;
+  else if(d.candidate&&currentYear>=d.candidate)badges+=`<span class="badge bg-candidate">EU Candidate (Since ${d.candidate})</span>`;
+  else if(d.perspective&&currentYear>=d.perspective)badges+=`<span class="badge bg-none" style="border-color:var(--perspective-color);color:var(--perspective-color);">European Perspective</span>`;
+  else badges+=`<span class="badge bg-none">Not in EU</span>`;
+  if(d.euro&&currentYear>=d.euro)badges+=`<span class="badge bg-euro">Eurozone (Since ${d.euro})</span>`;
+  if(d.schengen&&currentYear>=d.schengen)badges+=`<span class="badge bg-schengen">Schengen (Since ${d.schengen})</span>`;
+  let ctx='';
+  if(d.eu&&currentYear<d.eu)ctx=`In ${currentYear}, ${d.name} is not yet a member. They will join in <strong style="color:var(--accent-primary)">${d.eu}</strong>.`;
+  else if(d.exit&&currentYear>=d.exit)ctx=`In ${currentYear}, ${d.name} has left the EU, having formally departed in <strong style="color:var(--former-color)">${d.exit}</strong>.`;
+  else if(d.eu&&currentYear>=d.eu)ctx=`As of ${currentYear}, ${d.name} is an active EU member.`;
+  else if(d.candidate&&currentYear>=d.candidate)ctx=`As of ${currentYear}, ${d.name} holds <strong style="color:var(--candidate-color)">EU Candidate Status</strong>.`;
+  else if(d.perspective&&currentYear>=d.perspective)ctx=`As of ${currentYear}, ${d.name} has a <strong style="color:var(--perspective-color)">European perspective</strong>.`;
+  else if(d.schengen&&currentYear>=d.schengen)ctx=`${d.name} participates in the <strong style="color:var(--schengen-color)">Schengen Area</strong> through bilateral agreements.`;
+  else ctx=`${d.name} is not currently a member of the EU.`;
+  el.innerHTML=`<div class="name-large">${d.name}</div><div style="margin:10px 0 20px;display:flex;flex-wrap:wrap;">${badges}</div><hr style="border:0;border-top:1px solid var(--border-color);margin:20px 0;"><div class="integration-text">${ctx}</div>`;
+}
+fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson')
+  .then(r=>r.json()).then(data=>{
+    geojsonLayer=L.geoJson(data,{
+      style:style,
+      onEachFeature:(f,l)=>{
+        let nm=f.properties.admin;if(DATA[f.properties.iso_a2])nm=DATA[f.properties.iso_a2].name;
+        l.bindTooltip(nm,{className:'map-tooltip',sticky:true});
+        l.on('click',()=>showInfo(f.properties.iso_a2));
+      }
+    }).addTo(map);updateTimeline();
+  });
+document.getElementById('yearSlider').addEventListener('input',e=>{currentYear=parseInt(e.target.value);updateTimeline();});
+let playing=false,interval;
+document.getElementById('playBtn').addEventListener('click',()=>{
+  const btn=document.getElementById('playBtn');
+  if(playing){clearInterval(interval);btn.innerText="▶ Animate Timeline";btn.style.background="transparent";btn.style.color="var(--accent-primary)";}
+  else{
+    btn.innerText="⏸ Pause";btn.style.background="var(--accent-primary)";btn.style.color="var(--btn-text-hover)";
+    if(currentYear>=2026)currentYear=1950;
+    interval=setInterval(()=>{
+      currentYear++;
+      if(currentYear>2026){clearInterval(interval);playing=false;btn.innerText="▶ Animate Timeline";btn.style.background="transparent";btn.style.color="var(--accent-primary)";return;}
+      document.getElementById('yearSlider').value=currentYear;updateTimeline();
+    },600);
+  }
+  playing=!playing;
+});
+</script>
+</body>
+</html>
